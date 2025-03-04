@@ -11,8 +11,10 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "better-sqlite3": "^11.8.1",
     "dotenv": "^16.4.7",
     "nvm": "^0.0.4",
+    "quick.db": "^9.1.7",
     "regenerator-runtime": "^0.14.1",
     "revolt.js": "^6.0.0"
   }

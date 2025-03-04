@@ -1,2 +1,4 @@
 .env
 .env
+json.sqlite
+database.js

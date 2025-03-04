@@ -1,11 +1,14 @@
 const { Client } = require("revolt.js");
 const fs = require("fs");
 const path = require("path");
-require('dotenv').config();
+const { QuickDB } = require("quick.db");
+require("dotenv").config();
 
 const client = new Client(); // No cache option
+const db = new QuickDB();
 
 client.commands = new Map();
+const messageCooldowns = new Set(); // Prevent spam farming
 
 // Load Commands Function
 const loadCommands = (dir) => {
@@ -42,9 +45,8 @@ loadCommands(commandsPath);
 // Message Listener
 client.on("message", async (message) => {
     if (!message || !message.content) return; // Prevents null errors
-    if (!message.content.startsWith("!")) return;
 
-    console.log("[DEBUG] Raw message object:", message);
+    
 
     let serverId = message.serverId; // Check if serverId exists
 
@@ -66,23 +68,32 @@ client.on("message", async (message) => {
         return message.reply("❌ This command can only be used in a server.");
     }
 
+    // 📌 Message-based economy system
+    let userId = message.author_id;
+    if (!message.author.bot && !messageCooldowns.has(userId)) {
+        let earnings = Math.floor(Math.random() * 5) + 1; // Earn 1-5 coins
+        await db.add(`balance_${userId}`, earnings);
+        console.log(`💰 ${message.author.username} earned ${earnings} coins!`);
+
+        messageCooldowns.add(userId);
+        setTimeout(() => messageCooldowns.delete(userId), 10000); // 10-sec cooldown
+    }
+
+    // 📌 Command handling
+    if (!message.content.startsWith("!")) return;
     const args = message.content.slice(1).trim().split(/ +/);
     const commandName = args.shift().toLowerCase();
 
     if (client.commands.has(commandName)) {
         try {
             console.log(`[COMMAND] Executing: ${commandName} in Server: ${serverId}`);
-    
-            // Execute command and pass serverId
             await client.commands.get(commandName).execute(client, message, args, serverId);
         } catch (error) {
             console.error(`[❌] Error executing command: ${commandName}`, error);
             message.reply("There was an error executing that command.");
         }
     }
-    
 });
-
 
 // Bot Login
 client.on("ready", () => console.log("[✅] Bot is online!"));

@@ -12,7 +12,8 @@ module.exports = {
                     "`dice` - Rolls a 6-sided dice."
                 ],
                 "🔨 Moderation": [
-                    "`kick` - Kicks a member from the server."
+                    "`kick` - Kicks a member from the server.",
+                    "`ban` - Bans a member from the server. (Being worked on)"
                 ],
                 "📜 Utility": [
                     "`avatar` - Get the avatar of a user.",
@@ -20,6 +21,15 @@ module.exports = {
                     "`ping` - Replies with Pong!",
                     "`serverinfo` - Displays information about the server.",
                     "`userinfo` - Displays information about the user."
+                ],
+                "💰 Economy": [
+                    "`bal` - Check your balance.",
+                    "`bank` - Check your bank balance.",
+                    "`daily` - Claim your daily reward",
+                    "`richest` - Show the top 10 richest users..",
+                    "`withdraw` - Withdraw coins from your bank..",
+                    "`deposit` - Deposit coins into your bank.",
+                    "`work` - Earn coins by working."
                 ]
             };
 
