@@ -3,6 +3,7 @@ const fs = require("fs");
 const path = require("path");
 const { QuickDB } = require("quick.db");
 require("dotenv").config();
+const { initializeShop } = require("./commands/economy/shopItems");
 
 const client = new Client(); // No cache option
 const db = new QuickDB();
@@ -42,11 +43,36 @@ const loadCommands = (dir) => {
 const commandsPath = path.join(__dirname, "commands");
 loadCommands(commandsPath);
 
+// Initialize Inventories on Startup
+const initializeInventories = async () => {
+    console.log("[🛠️] Initializing user inventories...");
+    try {
+        const usersWithBalance = await db.all(); // Get all keys in DB
+
+        for (const entry of usersWithBalance) {
+            const key = entry.id;
+
+            if (key.startsWith("balance_")) {
+                const userId = key.replace("balance_", "");
+
+                // Check if user has an inventory
+                let inventory = await db.get(`inventory_${userId}`);
+                if (!inventory) {
+                    await db.set(`inventory_${userId}`, []);
+                    console.log(`🛠️ Initialized inventory for user ${userId}`);
+                }
+            }
+        }
+
+        console.log("✅ All user inventories initialized.");
+    } catch (error) {
+        console.error("❌ Error initializing inventories:", error);
+    }
+};
+
 // Message Listener
 client.on("message", async (message) => {
     if (!message || !message.content) return; // Prevents null errors
-
-    
 
     let serverId = message.serverId; // Check if serverId exists
 
@@ -96,7 +122,12 @@ client.on("message", async (message) => {
 });
 
 // Bot Login
-client.on("ready", () => console.log("[✅] Bot is online!"));
+client.on("ready", async () => {
+    console.log("[✅] Bot is online!");
+    
+    await initializeInventories(); // Initialize inventories on bot startup
+    await initializeShop(); // ✅ Initialize shop on bot startup
+});
 
 client.loginBot(process.env.REVOLT_TOKEN).catch((err) => {
     console.error("[❌] Failed to login. Check your token:", err);
