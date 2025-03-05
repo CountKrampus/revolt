@@ -1,4 +1,5 @@
 const { QuickDB } = require("quick.db");
+const adminRoleNames = require("../../data/adminRoles"); // Assuming this is an array
 const db = new QuickDB();
 
 module.exports = {
@@ -9,18 +10,24 @@ module.exports = {
         console.log("[COMMAND] Executing: removecoins");
 
         try {
-            // Define your admin role ID manually (get it from your server settings)
-            const adminRoleId = "01JNG10M14VT9M2H60ZVZDA3AN"; // Change this!
-
             // Fetch the server and member
             const server = await client.servers.fetch(msg.channel.server_id);
             const member = await server.fetchMember(msg.author_id);
+            
+            if (!member) {
+                return msg.channel.sendMessage("❌ Could not fetch member.");
+            }
 
             // Debugging: Log member's roles
             console.log(`[DEBUG] Member Roles: ${member.roles.join(", ")}`);
 
-            // Check if the user has the admin role
-            if (!member || !member.roles.includes(adminRoleId)) {
+            // Check if the sender has any of the admin roles
+            const isAdmin = member.roles.some(roleId => {
+                const role = server.roles[roleId]; // ✅ Correct way to access roles in Revolt.js
+                return role && adminRoleNames.includes(role.name);
+            });
+
+            if (!isAdmin) {
                 return msg.channel.sendMessage("❌ You must be an admin to use this command.");
             }
 

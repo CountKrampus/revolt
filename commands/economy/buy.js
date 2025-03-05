@@ -1,6 +1,6 @@
 const { QuickDB } = require("quick.db");
 const db = new QuickDB();
-const { shopItems } = require("./shopItems.js"); // Destructure to get the shopItems array
+const { shopItems } = require("../../data/shopItems.js"); // Destructure to get the shopItems array
 
 module.exports = {
     name: "buy",

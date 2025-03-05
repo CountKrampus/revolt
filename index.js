@@ -3,7 +3,8 @@ const fs = require("fs");
 const path = require("path");
 const { QuickDB } = require("quick.db");
 require("dotenv").config();
-const { initializeShop } = require("./commands/economy/shopItems");
+const { initializeShop } = require("./data/shopItems");
+const adminRoleNames = require("./data/adminRoles");
 
 const client = new Client(); // No cache option
 const db = new QuickDB();
@@ -94,6 +95,13 @@ client.on("message", async (message) => {
         return message.reply("❌ This command can only be used in a server.");
     }
 
+    // 📌 Dynamic Prefix Handling
+    const prefix = (await db.get(`prefix_${serverId}`)) || "!"; // Default prefix: "!"
+    if (!message.content.startsWith(prefix)) return;
+
+    const args = message.content.slice(prefix.length).trim().split(/ +/);
+    const commandName = args.shift().toLowerCase();
+
     // 📌 Message-based economy system
     let userId = message.author_id;
     if (!message.author.bot && !messageCooldowns.has(userId)) {
@@ -106,10 +114,6 @@ client.on("message", async (message) => {
     }
 
     // 📌 Command handling
-    if (!message.content.startsWith("!")) return;
-    const args = message.content.slice(1).trim().split(/ +/);
-    const commandName = args.shift().toLowerCase();
-
     if (client.commands.has(commandName)) {
         try {
             console.log(`[COMMAND] Executing: ${commandName} in Server: ${serverId}`);
@@ -118,6 +122,34 @@ client.on("message", async (message) => {
             console.error(`[❌] Error executing command: ${commandName}`, error);
             message.reply("There was an error executing that command.");
         }
+    }
+});
+
+// Handle when a member joins the server (guildMemberAdd)
+client.on('guildMemberAdd', async (member) => {
+    try {
+        const welcomeMessage = await db.get(`welcomeMessage_${member.guild.id}`);
+        const channel = member.guild.channels.cache.find(ch => ch.name.toLowerCase() === "welcome's and leaves");
+
+        if (channel && welcomeMessage) {
+            channel.send(welcomeMessage.replace("{user}", member.user.tag)); // Optionally use placeholders like {user}
+        }
+    } catch (error) {
+        console.error("[ERROR] Failed to send welcome message:", error);
+    }
+});
+
+// Handle when a member leaves the server (guildMemberRemove)
+client.on('guildMemberRemove', async (member) => {
+    try {
+        const goodbyeMessage = await db.get(`goodbyeMessage_${member.guild.id}`);
+        const channel = member.guild.channels.cache.find(ch => ch.name.toLowerCase() === "welcome's and leaves");
+
+        if (channel && goodbyeMessage) {
+            channel.send(goodbyeMessage.replace("{user}", member.user.tag)); // Optionally use placeholders like {user}
+        }
+    } catch (error) {
+        console.error("[ERROR] Failed to send goodbye message:", error);
     }
 });
 
