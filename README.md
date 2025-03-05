@@ -6,3 +6,5 @@
 ➡️ Ban command (Isn't current working)
 
 ➡️ Remindme command wont send to DM and when it does, it spams
+
+➡️goodbye/welcome message is undefined
