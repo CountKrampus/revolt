@@ -1,5 +1,5 @@
 const { QuickDB } = require("quick.db");
-const adminRoleNames = require("../../data/adminRoles");
+const { adminRoles } = require("../../data/roles.js"); // Destructure to get adminRoles
 const db = new QuickDB();
 
 module.exports = {
@@ -8,27 +8,31 @@ module.exports = {
     category: "Owner",
     execute: async (client, msg, args) => {
         try {
-            const server = await client.servers.fetch(msg.channel.server_id);
+            // Fetch the server from the channel
+            const serverId = msg.channel.server_id;
+            const server = await client.servers.fetch(serverId);
+
+            // Fetch the member to check their roles
             const member = await server.fetchMember(msg.author_id);
 
             // Check if the sender has any of the admin roles
             const isAdmin = member.roles.some(roleId => {
-                const role = server.roles[roleId];
-                return role && adminRoleNames.includes(role.name); // Check for admin role
+                const role = server.roles[roleId]; // Correct way to access roles in Revolt.js
+                return role && adminRoles.includes(role.name); // Check for admin role
             });
 
             if (!isAdmin) {
                 return msg.channel.sendMessage("❌ You must have an admin role to use this command.");
             }
 
-            // Validate the input
+            // Validate the input for the welcome message
             const welcomeMessage = args.join(" ");
             if (!welcomeMessage) {
                 return msg.channel.sendMessage("❌ Please provide a welcome message.");
             }
 
             // Save the welcome message to the database
-            await db.set(`welcomeMessage_${server.id}`, welcomeMessage);
+            await db.set(`welcomeMessage_${serverId}`, welcomeMessage);
 
             // Get or create the Welcome's and Leaves channel
             const channel = server.channels.find(ch => ch.name.toLowerCase() === "welcome's and leaves");

@@ -1,7 +1,6 @@
 const { QuickDB } = require("quick.db");
+const { adminRoles } = require("../../data/roles.js"); // Destructure to get adminRoles
 const db = new QuickDB();
-const adminRoleNames = require("../../data/adminRoles.js"); // Move up two levels
-
 
 module.exports = {
     name: "setprefix",
@@ -18,8 +17,8 @@ module.exports = {
 
             // Check if the sender has any of the admin roles
             const isAdmin = senderRoles.some(roleId => {
-                const role = server.roles[roleId]; // ✅ Correct way to access roles in Revolt.js
-                return role && adminRoleNames.includes(role.name);
+                const role = server.roles[roleId]; // Correct way to access roles in Revolt.js
+                return role && adminRoles.includes(role.name); // Using adminRoles from roles.js
             });
 
             if (!isAdmin) {

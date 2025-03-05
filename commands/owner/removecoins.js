@@ -1,5 +1,5 @@
 const { QuickDB } = require("quick.db");
-const adminRoleNames = require("../../data/adminRoles"); // Assuming this is an array
+const { adminRoles } = require("../../data/roles.js"); // Destructure to get adminRoles
 const db = new QuickDB();
 
 module.exports = {
@@ -10,21 +10,26 @@ module.exports = {
         console.log("[COMMAND] Executing: removecoins");
 
         try {
-            // Fetch the server and member
-            const server = await client.servers.fetch(msg.channel.server_id);
-            const member = await server.fetchMember(msg.author_id);
-            
-            if (!member) {
+            const senderId = msg.author_id;
+            const mentionedUser = msg.mention_ids?.[0]; // Get mentioned user
+
+            // Fetch server
+            const serverId = msg.channel.server_id;
+            const server = await client.servers.fetch(serverId);
+            const senderMember = await server.fetchMember(senderId);
+            const senderRoles = senderMember.roles || [];
+
+            if (!senderMember) {
                 return msg.channel.sendMessage("❌ Could not fetch member.");
             }
 
-            // Debugging: Log member's roles
-            console.log(`[DEBUG] Member Roles: ${member.roles.join(", ")}`);
+            // Debugging: Log sender's roles
+            console.log(`[DEBUG] Sender Roles: ${senderRoles.join(", ")}`);
 
             // Check if the sender has any of the admin roles
-            const isAdmin = member.roles.some(roleId => {
-                const role = server.roles[roleId]; // ✅ Correct way to access roles in Revolt.js
-                return role && adminRoleNames.includes(role.name);
+            const isAdmin = senderRoles.some(roleId => {
+                const role = server.roles[roleId]; // Correct way to access roles in Revolt.js
+                return role && adminRoles.includes(role.name); // Using adminRoles from roles.js
             });
 
             if (!isAdmin) {
@@ -32,7 +37,7 @@ module.exports = {
             }
 
             // Validate arguments
-            const targetUser = args[0]?.replace(/[<@>]/g, ""); // Extract user ID from mention
+            const targetUser = mentionedUser?.replace(/[<@>]/g, ""); // Extract user ID from mention
             const amount = parseInt(args[1], 10);
 
             if (!targetUser || isNaN(amount) || amount <= 0) {
